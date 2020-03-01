@@ -2,6 +2,6 @@ package com.packrat.revolution
 
 
 
-data class User(var uname: String = "user") {
+data class User(var uname: String = "") {
     var username: String = uname
 }
