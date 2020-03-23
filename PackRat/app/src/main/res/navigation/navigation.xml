@@ -18,5 +18,14 @@
         android:id="@+id/listsFragment"
         android:name="com.packrat.revolution.ListsFragment"
         android:label="fragment_lists"
-        tools:layout="@layout/fragment_lists" />
+        tools:layout="@layout/fragment_lists" >
+        <action
+            android:id="@+id/action_listsFragment_to_itemsFragment"
+            app:destination="@id/itemsFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/itemsFragment"
+        android:name="com.packrat.revolution.ItemsFragment"
+        android:label="fragment_items"
+        tools:layout="@layout/fragment_items" />
 </navigation>
