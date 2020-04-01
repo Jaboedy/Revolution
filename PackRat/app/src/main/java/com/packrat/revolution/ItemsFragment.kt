@@ -6,22 +6,32 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.Toast
 import androidx.databinding.DataBindingUtil
 import com.packrat.revolution.databinding.FragmentItemsBinding
+import kotlinx.android.synthetic.main.fragment_items.*
 
 /**
  * A simple [Fragment] subclass.
  */
 class ItemsFragment : Fragment() {
-
+    val items = mutableListOf(Item(1, "1234", "Item 1", "First Item"), Item(2, "4321", "Item 2", "Second Item"))
+    val buttons = mutableListOf<Button>()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
         val binding = DataBindingUtil.inflate<FragmentItemsBinding>(inflater,
-            R.layout.fragment_lists,container,false)
-        return inflater.inflate(R.layout.fragment_items, container, false)
+            R.layout.fragment_items,container,false)
+        for (item in items) {
+            val button = Button(binding.itemsContainer.context)
+            button.text = item.ItemName
+            button.setOnClickListener { Toast.makeText(this.context, item.Description, Toast.LENGTH_LONG).show()}
+            binding.itemsContainer.addView(button)
+        }
+        return binding.root
     }
 
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context=".ListsFragment">
 
@@ -21,22 +22,10 @@
                 android:orientation="vertical">
 
                 <Button
-                    android:id="@+id/Collection1"
+                    android:id="@+id/listButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/collection_button_1" />
-
-                <Button
-                    android:id="@+id/Collection2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/collection_button_2" />
-
-                <Button
-                    android:id="@+id/Collection3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/collection_button_3" />
+                    android:text="List 1" />
             </LinearLayout>
         </androidx.core.widget.NestedScrollView>
 

@@ -8,6 +8,8 @@
     <string name="username_hint">Username</string>
     <string name="password_hint">Password</string>
     <string name="login_button_text">Login</string>
+    <string name="create_new_account">Create New Account</string>
+    <string name="new_user_button_text">Create Account</string>
     <string name="collection_button_1">Collection 1</string>
     <string name="collection_button_2">Collection 2</string>
     <string name="collection_button_3">Collection 3</string>

@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_loginFragment_to_listsFragment"
             app:destination="@+id/listsFragment" />
+        <action
+            android:id="@+id/action_loginFragment_to_newUserFragment"
+            app:destination="@id/newUserFragment" />
     </fragment>
     <fragment
         android:id="@+id/listsFragment"
@@ -28,4 +31,13 @@
         android:name="com.packrat.revolution.ItemsFragment"
         android:label="fragment_items"
         tools:layout="@layout/fragment_items" />
+    <fragment
+        android:id="@+id/newUserFragment"
+        android:name="com.packrat.revolution.NewUserFragment"
+        android:label="fragment_new_user"
+        tools:layout="@layout/fragment_new_user" >
+        <action
+            android:id="@+id/action_newUserFragment_to_listsFragment"
+            app:destination="@id/listsFragment" />
+    </fragment>
 </navigation>
