@@ -16,12 +16,12 @@ import kotlinx.android.synthetic.main.fragment_items.*
  * A simple [Fragment] subclass.
  */
 class ItemsFragment : Fragment() {
-    val items = mutableListOf(Item(1, "1234", "Item 1", "First Item"), Item(2, "4321", "Item 2", "Second Item"))
     val buttons = mutableListOf<Button>()
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val items = mutableListOf(Item(1, "1234", arguments!!.getString("listArg")!!, "First Item"), Item(2, "4321", "Item 2", "Second Item"))
         // Inflate the layout for this fragment
         val binding = DataBindingUtil.inflate<FragmentItemsBinding>(inflater,
             R.layout.fragment_items,container,false)

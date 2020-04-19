@@ -17,16 +17,10 @@
             android:fillViewport="true">
 
             <LinearLayout
+                android:id="@+id/listsContainer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-
-                <Button
-                    android:id="@+id/listButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="List 1" />
-            </LinearLayout>
+                android:orientation="vertical" />
         </androidx.core.widget.NestedScrollView>
 
     </FrameLayout>

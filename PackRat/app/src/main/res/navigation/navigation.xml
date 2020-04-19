@@ -25,12 +25,19 @@
         <action
             android:id="@+id/action_listsFragment_to_itemsFragment"
             app:destination="@id/itemsFragment" />
+        <argument
+            android:name="usernameArg"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/itemsFragment"
         android:name="com.packrat.revolution.ItemsFragment"
         android:label="fragment_items"
-        tools:layout="@layout/fragment_items" />
+        tools:layout="@layout/fragment_items" >
+        <argument
+            android:name="listArg"
+            app:argType="string" />
+    </fragment>
     <fragment
         android:id="@+id/newUserFragment"
         android:name="com.packrat.revolution.NewUserFragment"
