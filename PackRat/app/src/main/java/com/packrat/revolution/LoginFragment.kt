@@ -17,8 +17,6 @@ import com.packrat.revolution.databinding.FragmentLoginBinding
  */
 class LoginFragment : Fragment() {
 
-
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?

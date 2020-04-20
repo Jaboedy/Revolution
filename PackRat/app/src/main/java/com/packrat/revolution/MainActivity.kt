@@ -17,6 +17,7 @@ class MainActivity : AppCompatActivity(){
 
     private lateinit var binding: ActivityMainBinding
     private val user: User = User("Inconsequential Developer #1")
+    private var HttpRequest = OkHttpRequest()
 
     override fun onCreate(savedInstanceState: Bundle?) {
 
