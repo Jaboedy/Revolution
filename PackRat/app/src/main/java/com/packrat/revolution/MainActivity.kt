@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity(){
 
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        DatabaseConnection.AddItemToDatabase("786936808988", "The Nightmare Before Christmas[DVD]", " Follow the misadventures of Jack Skellington!")
+        val list = DatabaseConnection.GetItemFromDatabase("024543482413")
         binding.user = user
     }
 
