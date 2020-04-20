@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity(){
 
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
-        DatabaseConnection.CreateUser("COVID1", "SponsoredByFoxNews")
+        DatabaseConnection.AddItemToDatabase("786936808988", "The Nightmare Before Christmas[DVD]", " Follow the misadventures of Jack Skellington!")
         binding.user = user
     }
 
