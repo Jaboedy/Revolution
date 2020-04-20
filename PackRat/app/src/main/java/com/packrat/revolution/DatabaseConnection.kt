@@ -6,6 +6,10 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+
+
 
 object DatabaseConnection {
     fun getUnsafeOkHttpClient(): OkHttpClient {
@@ -50,4 +54,23 @@ object DatabaseConnection {
         })
     }
 
+    public fun CreateUser(userName: String, password: String){
+        println("Attempting to Create User")
+        val url = "http://ec2-3-92-30-180.compute-1.amazonaws.com/user?name=$userName&password=$password"
+        val requestBody = MultipartBody.Builder()
+                         .setType(MultipartBody.FORM)
+                         .addFormDataPart("somParam", "someValue")
+                         .build()
+        val request = Request.Builder().url(url).put(requestBody).build()
+        val client = getUnsafeOkHttpClient()
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val rBody = response.body()?.string()
+                println("AuthToken: $rBody")
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Failed to Execute!!!")
+            }
+        })
+    }
 }
