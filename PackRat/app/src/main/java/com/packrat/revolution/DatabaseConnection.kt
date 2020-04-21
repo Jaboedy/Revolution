@@ -16,9 +16,17 @@ import okhttp3.OkHttpClient
 
 class DatabaseConnection {
 
-    public  val rootURL  = "http://ec2-3-92-30-180.compute-1.amazonaws.com"
+    //Private Attributes
+    private var Token       : String = ""
     private var Collections : List<Collection> = emptyList()
+    private var Items       : List<ItemG> = emptyList()
+    private var collectionsAvailable : Boolean = true
+    private var itemsAvailable:        Boolean = true
+    private var tokenAvailable:        Boolean = true
     private val unsafeHttpClient = getUnsafeOkHttpClient()
+
+    //Public Attributes
+    val rootURL  = "http://ec2-3-92-30-180.compute-1.amazonaws.com"
 
     fun getUnsafeOkHttpClient(): OkHttpClient {
         //Create a trust manager that does not validate certificate chains
@@ -63,6 +71,57 @@ class DatabaseConnection {
         }
     }
 
+    fun getAuthToken() : String{
+        return Token
+    }
+
+    fun setAuthToken(userName: String, password: String){
+
+        //Generate Request URL
+        val url = "$rootURL/login?name=$userName&password=$password"
+
+        //Generate the Request
+        val request = Request.Builder().url(url).build()
+
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                if (body != null){
+                    Token = body
+                }
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+            }
+        })
+    }
+
+    fun createAuthToken(userName: String, password: String){
+
+        //Generate Request URL
+        val url = "$rootURL/user?name=$userName&password=$password"
+
+        //Generate the Empty JSON Request Body
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonBody = "{}"
+        val requestBody = RequestBody.create(jsonMediaType, jsonBody)
+
+        //Generate the Request
+        val request = Request.Builder().url(url).put(requestBody).build()
+
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                if (body != null){
+                    Token = body
+                }
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+            }
+        })
+    }
+
     fun getCollections() : List<Collection>{
         return Collections
     }
@@ -85,6 +144,35 @@ class DatabaseConnection {
                 println("Code: ${response.code()} | Body: $body")
                 val gson = GsonBuilder().create()
                 Collections = gson.fromJson(body, Array<Collection>::class.java).toList()
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+            }
+        })
+    }
+
+    fun getItems() : List<ItemG>{
+        return Items
+    }
+
+    fun setItems(AuthToken: String, CollectionId : String){
+
+        //Generate the URL
+        val url = "$rootURL/collection?token=$AuthToken"
+
+        //Generate the Request
+        val request = Request.Builder().url(url).get().build()
+
+        //Generate the Client
+        val client = getUnsafeOkHttpClient()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                println("Code: ${response.code()} | Body: $body")
+                val gson = GsonBuilder().create()
+                Items = gson.fromJson(body, Array<ItemG>::class.java).toList()
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
@@ -174,6 +262,5 @@ class DatabaseConnection {
 class CollectionFeed(val Collections: List<Collection>)
 class Collection(val id: Int, val user_id: Int, val name: String, val desc: String)
 
-class DatabaseItem(val id: Int, val barcode: String, val name: String, val desc: String)
-class DatabaseItemList(val DatabaseItems: List<DatabaseItem>)
-
+class ItemFeed(val DatabaseItems: List<ItemG>)
+class ItemG(val id: Int, val barcode: String, val name: String, val desc: String)
