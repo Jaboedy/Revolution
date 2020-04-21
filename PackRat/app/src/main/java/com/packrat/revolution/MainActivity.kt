@@ -19,7 +19,6 @@ class MainActivity : AppCompatActivity(){
 
 
     private lateinit var binding: ActivityMainBinding
-    private val user: User = User("Inconsequential Developer #1")
     val DatabaseTest = DatabaseConnection()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,10 +26,10 @@ class MainActivity : AppCompatActivity(){
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
         DatabaseTest.setAuthToken("COVID1","SponsoredByFoxNews")
         val authToken = DatabaseTest.waitForAuthToken()
-        DatabaseTest.setCollections("$authToken")
+        val user = User("Inconsequential Developer #1", authToken)
+        DatabaseTest.setCollections(authToken)
         while (!DatabaseTest.collectionsAvailable){}
         val Collections = DatabaseTest.getCollections()
-        binding.user = user
     }
 
 

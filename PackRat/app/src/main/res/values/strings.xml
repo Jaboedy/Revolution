@@ -13,4 +13,9 @@
     <string name="collection_button_1">Collection 1</string>
     <string name="collection_button_2">Collection 2</string>
     <string name="collection_button_3">Collection 3</string>
+    <string name="collection_name_text">Collection Name</string>
+    <string name="collection_description_text">Description</string>
+    <string name="new_collection_button_text">Create Collection</string>
+    <string name="add_item_button_text">Add Item</string>
+    <string name="add_item_id_text">Item ID</string>
 </resources>
