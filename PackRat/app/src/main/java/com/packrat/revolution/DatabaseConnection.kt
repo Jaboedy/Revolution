@@ -22,14 +22,15 @@ import androidx.databinding.adapters.TextViewBindingAdapter.setText
 class DatabaseConnection {
 
     //Private Attributes
-    private var Token             : String = ""
-    private var Collections       : List<Collection> = emptyList()
-    private var ItemsInCollection : List<ItemG> = emptyList()
-    private var ItemsByBarcode    : List<ItemG> = emptyList()
+    private var Token              : String = ""
+    private var Collections        : List<Collection> = emptyList()
+    private var ItemsInCollection  : List<ItemG> = emptyList()
+    private var ItemsByBarcode     : List<ItemG> = emptyList()
+    private var AddedItemsByBarcode: List<ItemA> = emptyList()
     private var methodTimeOut     : Int = 15000
     private val unsafeHttpClient = getUnsafeOkHttpClient()
 
-    //Public Attributes
+    //Public Attributes: Locks
     var tokenAvailable:                   Boolean = true
     var collectionsAvailable :            Boolean = true
     var createdCollectionAvailable:       Boolean = true
@@ -37,6 +38,12 @@ class DatabaseConnection {
     var addedItemsInCollectionAvailable : Boolean = true
     var itemsByBarcodeAvailable:          Boolean = true
     var addedItemsByBarcodeAvailable:     Boolean = true
+
+    //Public Attributes: Return Messages
+    var tokenReturnMessage: String = ""
+    var collectionReturnMessage: String = ""
+    var addItemByBarcodeReturnMessage: String = ""
+
 
     val rootURL  = "http://ec2-3-92-30-180.compute-1.amazonaws.com"
 
@@ -97,14 +104,23 @@ class DatabaseConnection {
 
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body()?.string()
-                if (body != null){
-                   Token = body
+                val responseData = response
+                val responseBody = responseData.body()?.string()
+                if (responseData.code() == 200){
+                   tokenReturnMessage = "Log In Successful!"
+                   if (responseBody != null){
+                       Token = responseBody
+                   }
                 }
+                if (responseData.code() == 401){
+                    tokenReturnMessage = "Invalid Username and/or Password."
+                }
+                println("Token: $Token" + "Return Message: $tokenReturnMessage" )
                 tokenAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                tokenReturnMessage = "Log In Failed. Please Try Again Later!"
                 tokenAvailable = true
             }
         })
@@ -183,11 +199,16 @@ class DatabaseConnection {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                 val body = response.body()?.string()
+                val responseData = response
+                val body = responseData.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
-                if (body != null){
+                if (responseData.code() == 400){
+                    collectionReturnMessage = "An Error Has Occurred. Please Try Again Later!"
+                }
+                if (responseData.code() == 200){
                     val gson = GsonBuilder().create()
                     Collections = gson.fromJson(body, Array<Collection>::class.java).toList()
+                    collectionReturnMessage = "Collection Retrieval Successful"
                 }
                 collectionsAvailable = true
             }
@@ -367,6 +388,16 @@ class DatabaseConnection {
         })
     }
 
+    fun waitForAddedItemsByBarcode() : List<ItemA>{
+        val endTime = System.currentTimeMillis() + methodTimeOut
+        while (addedItemsByBarcodeAvailable == false && endTime > System.currentTimeMillis()){}
+        return AddedItemsByBarcode
+    }
+
+    fun getAddedItemsByBarcode() : List<ItemA>{
+        return AddedItemsByBarcode
+    }
+
     fun addItemsByBarcode(Barcode: String, Name: String, Description: String){
         //Block Token Request if Token Unavailable
         if (!addedItemsByBarcodeAvailable){
@@ -392,12 +423,24 @@ class DatabaseConnection {
 
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
-                val body = response.body()?.string()
+                val responseData = response
+                val body = responseData.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
+                if(responseData.code() == 409){
+                    addItemByBarcodeReturnMessage = "This Item Already Exsists!"
+                }
+                if (responseData.code() == 201){
+                    if (body != null){
+                        val gson = GsonBuilder().create()
+                        AddedItemsByBarcode = gson.fromJson(body, Array<ItemA>::class.java).toList()
+                        addItemByBarcodeReturnMessage = "This Item Has Been Created!"
+                    }
+                }
                 addedItemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                addItemByBarcodeReturnMessage = "An Error Has Occurred! Please Try Again Later!!!"
                 addedItemsByBarcodeAvailable = true
             }
         })
@@ -411,3 +454,4 @@ class Collection(val id: Int, val user_id: Int, val name: String, val desc: Stri
 
 class ItemFeed(val DatabaseItems: List<ItemG>)
 class ItemG(val id: Int, val barcode: String, val name: String, val desc: String)
+class ItemA(val id: Int)
