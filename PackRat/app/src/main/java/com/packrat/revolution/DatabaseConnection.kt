@@ -11,6 +11,11 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.json.JSONObject
 import okhttp3.OkHttpClient
+import androidx.databinding.adapters.TextViewBindingAdapter.setText
+import android.os.CountDownTimer
+import android.se.omapi.Session
+import androidx.databinding.adapters.TextViewBindingAdapter.setText
+
 
 
 
@@ -20,9 +25,10 @@ class DatabaseConnection {
     private var Token       : String = ""
     private var Collections : List<Collection> = emptyList()
     private var Items       : List<ItemG> = emptyList()
-    private var collectionsAvailable : Boolean = true
+    public  var collectionsAvailable : Boolean = true
     private var itemsAvailable:        Boolean = true
-    private var tokenAvailable:        Boolean = true
+    public  var tokenAvailable:        Boolean = true
+    private var methodTimeOut :        Int = 5000
     private val unsafeHttpClient = getUnsafeOkHttpClient()
 
     //Public Attributes
@@ -45,14 +51,27 @@ class DatabaseConnection {
         //Create an SSL socket factory with our all-trusting free hugs loving manager
         val sslSocketFactory = sslContext.socketFactory
 
-        //Return Your Unsafe OkHttp Client
-        return OkHttpClient().newBuilder()
-            .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
-            .hostnameVerifier { _, _ -> true }.build()
+        //Return Your Unsafe Highly Inefficient OkHttp Client
+        val client = OkHttpClient().newBuilder()
+                     .sslSocketFactory(sslSocketFactory, trustAllCerts[0] as X509TrustManager)
+                      .hostnameVerifier { _, _ -> true }.build()
+        client.dispatcher().setMaxRequests(1)
+        client.dispatcher().setMaxRequestsPerHost(1)
+        return client
 
     }
 
     fun SynchronousLogIn(userName: String, password: String) : String?{
+
+        //Block Token Request if Token Unavailable
+        if (!tokenAvailable){
+            return Token
+        }
+
+        //Set Availability
+        else{
+            tokenAvailable = false
+        }
 
         //Generate Request URL
         val url = "$rootURL/login?name=$userName&password=$password"
@@ -64,6 +83,7 @@ class DatabaseConnection {
         val response = unsafeHttpClient.newCall(request).execute()
 
         //Return AuthToken
+        tokenAvailable = true
         return if (response.isSuccessful){
             response.body()?.toString()
         }else{
@@ -75,7 +95,30 @@ class DatabaseConnection {
         return Token
     }
 
+    fun waitForAuthToken() : String{
+        var sessionTimedOut = false
+        while (tokenAvailable == false && sessionTimedOut == false){
+            object : CountDownTimer(methodTimeOut.toLong(), 1000) {
+                override fun onTick(millisUntilFinished: Long) {
+                }
+                override fun onFinish() {
+                    sessionTimedOut = true
+                }
+            }.start()
+        }
+        return Token
+    }
+
     fun setAuthToken(userName: String, password: String){
+        //Block Token Request if Token Unavailable
+        if (!tokenAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            tokenAvailable = false
+        }
 
         //Generate Request URL
         val url = "$rootURL/login?name=$userName&password=$password"
@@ -87,11 +130,13 @@ class DatabaseConnection {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
                 if (body != null){
-                    Token = body
+                   Token = body
                 }
+                tokenAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                tokenAvailable = true
             }
         })
     }
@@ -128,6 +173,16 @@ class DatabaseConnection {
 
     fun setCollections(AuthToken: String){
 
+        //Block Token Request if Token Unavailable
+        if (!collectionsAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            collectionsAvailable = false
+        }
+
         //Generate the URL
         val url = "$rootURL/collection?token=$AuthToken"
 
@@ -142,13 +197,25 @@ class DatabaseConnection {
             override fun onResponse(call: Call, response: Response) {
                  val body = response.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
-                val gson = GsonBuilder().create()
-                Collections = gson.fromJson(body, Array<Collection>::class.java).toList()
+                if (body != null){
+                    val gson = GsonBuilder().create()
+                    Collections = gson.fromJson(body, Array<Collection>::class.java).toList()
+                }
+                collectionsAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                collectionsAvailable = true
             }
         })
+    }
+
+    fun editCollection(){
+
+    }
+
+    fun createCollection(){
+
     }
 
     fun getItems() : List<ItemG>{
@@ -178,6 +245,10 @@ class DatabaseConnection {
                 println("Error: ${e.message}")
             }
         })
+    }
+
+    fun createItems(){
+
     }
 
     /*
