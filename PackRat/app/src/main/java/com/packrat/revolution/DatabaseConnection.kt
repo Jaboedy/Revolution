@@ -425,7 +425,7 @@ class DatabaseConnection {
             override fun onResponse(call: Call, response: Response) {
                 val responseData = response
                 val body = responseData.body()?.string()
-                println("Code: ${response.code()} | Body: $body")
+                println("BRODY LOOK HERE Code: ${response.code()} | Body: $body")
                 if(responseData.code() == 409){
                     addItemByBarcodeReturnMessage = "This Item Already Exsists!"
                 }

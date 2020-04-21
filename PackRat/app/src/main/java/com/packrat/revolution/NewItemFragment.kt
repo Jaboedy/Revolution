@@ -28,7 +28,9 @@ class NewItemFragment : Fragment() {
         binding.addItemButton.setOnClickListener {view: View ->
             view.run {
                 var dc = DatabaseConnection()
-                dc.addItemsInCollection(aToken, listId, binding.textboxAddItem.text.toString())
+                dc.addItemsByBarcode(binding.textboxItemBarcode.text.toString(),binding.textboxItemName.text.toString(),binding.textboxItemDesc.text.toString())
+                var id = dc.waitForItemsByBarcode()
+                dc.addItemsInCollection(aToken, listId, id.first().id.toString())
                 findNavController().navigate(R.id.action_newItemFragment_to_itemsFragment, bundleOf("authTokenArg" to aToken, "listIdArg" to listId))
             }
 
