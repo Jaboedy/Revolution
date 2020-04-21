@@ -281,20 +281,52 @@ class DatabaseConnection {
         })
     }
 
-    fun addItemsInCollection(){
+    fun addItemsInCollection(AuthToken: String, CollectionId: String, ItemId: String){
+        //Block Token Request if Token Unavailable
+        if (!addedItemsInCollectionAvailable){
+            return
+        }
 
+        //Set Availability
+        else{
+            addedItemsInCollectionAvailable = false
+        }
+
+        //Generate Request URL
+        val url = "$rootURL/collection_item?token=$AuthToken&collection_id=$CollectionId&item_id=$ItemId"
+
+        //Generate the JSON Request Body
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonBody = "{}"
+        val requestBody = RequestBody.create(jsonMediaType, jsonBody)
+
+        //Generate the Request
+        val request = Request.Builder().url(url).put(requestBody).build()
+
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                addedItemsInCollectionAvailable = true
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+                addedItemsInCollectionAvailable = true
+            }
+        })
     }
 
     /*Functions for Items by Barcode Actions*/
-    fun waitForItemsByBarcode(){
-
+    fun waitForItemsByBarcode(): List<ItemG>{
+        val endTime = System.currentTimeMillis() + methodTimeOut
+        while (itemsByBarcodeAvailable == false && endTime > System.currentTimeMillis()){}
+        return ItemsByBarcode
     }
 
     fun getItemsByBarcode() : List<ItemG>{
         return ItemsByBarcode
     }
 
-    fun setItemsByBarcode(AuthToken: String, CollectionId : String){
+    fun setItemsByBarcode(barcode: String){
 
         //Block Token Request if Token Unavailable
         if (!itemsByBarcodeAvailable){
@@ -307,16 +339,12 @@ class DatabaseConnection {
         }
 
         //Generate the URL
-        val url = "$rootURL/collection?token=$AuthToken"
+        val url = "$rootURL/item?barcode=$barcode"
 
         //Generate the Request
         val request = Request.Builder().url(url).get().build()
 
-        //Generate the Client
-        val client = getUnsafeOkHttpClient()
-
-
-        client.newCall(request).enqueue(object : Callback {
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
@@ -332,65 +360,41 @@ class DatabaseConnection {
     }
 
     fun addItemsByBarcode(Barcode: String, Name: String, Description: String){
+        //Block Token Request if Token Unavailable
+        if (!addedItemsByBarcodeAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            addedItemsByBarcodeAvailable = false
+        }
+
         //Generate the JSON Request Body
         val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
         val jsonBody = "{\"barcode\": \"$Barcode\",\"name\": \"$Name\",\"desc\": \"$Description\"}"
-        val body = RequestBody.create(jsonMediaType, jsonBody)
+        val requestBody = RequestBody.create(jsonMediaType, jsonBody)
 
-
-    }
-
-    /*
-
-    fun AddItemToDatabase(Barcode: String, Name: String, Description: String){
-
-        //Print Line for Function Initiation Confirmation
-        println("Attempting to Add Item to the Database")
-
+        //Generate the URL
+        val url = "$rootURL/item"
 
 
         //Generate the Request
-        val url = "http://ec2-3-92-30-180.compute-1.amazonaws.com/item"
-        val request = Request.Builder().url(url).put(body).build()
-        val client = getUnsafeOkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                println("Code: ${response.code()} | Body: ${response.body()?.string()}")
-            }
-            override fun onFailure(call: Call, e: IOException) {
-                println("Error: ${e.message}")
-            }
-        })
+        val request = Request.Builder().url(url).put(requestBody).build()
 
-    }
-    fun GetItemFromDatabase(Barcode: String) : List<DatabaseItem>{
-
-        //Print Line for Function Initiation Confirmation
-        println("Attempting to Get Item to the Database")
-        val result = ArrayList<DatabaseItem>()
-
-        //Generate the Request
-        val url = "http://ec2-3-92-30-180.compute-1.amazonaws.com/item?barcode=$Barcode"
-        val request = Request.Builder().url(url).get().build()
-        val client = getUnsafeOkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
-                println("Code: ${response.code()} | Body: $body")
-                val gson = GsonBuilder().create()
-                val databaseItemList : List<DatabaseItem> = gson.fromJson(body, Array<DatabaseItem>::class.java).toList()
-                for (DatabaseItem in databaseItemList)
-                    result.add(DatabaseItem)
+                addedItemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                addedItemsByBarcodeAvailable = true
             }
         })
-        return result
 
     }
 
-     */
 }
 
 class CollectionFeed(val Collections: List<Collection>)
