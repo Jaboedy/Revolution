@@ -224,6 +224,9 @@ class DatabaseConnection {
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
+                if (body != null){
+                    println("Success: $body")
+                }
                 createdCollectionAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
@@ -236,7 +239,7 @@ class DatabaseConnection {
     /*Functions for Items in Collection Actions*/
     fun waitForItemsInCollection(): List<ItemG>{
         val endTime = System.currentTimeMillis() + methodTimeOut
-        while (collectionsAvailable == false && endTime > System.currentTimeMillis()){}
+        while (itemsInCollectionAvailable == false && endTime > System.currentTimeMillis()){}
         return ItemsInCollection
     }
 
@@ -257,7 +260,7 @@ class DatabaseConnection {
         }
 
         //Generate the URL
-        val url = "$rootURL/collection?token=$AuthToken&collection_id=$CollectionId"
+        val url = "$rootURL/collection_item?token=$AuthToken&collection_id=$CollectionId"
 
         //Generate the Request
         val request = Request.Builder().url(url).get().build()
@@ -270,8 +273,10 @@ class DatabaseConnection {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
-                val gson = GsonBuilder().create()
-                ItemsInCollection = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                if (body != null){
+                    val gson = GsonBuilder().create()
+                    ItemsInCollection = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                }
                 itemsInCollectionAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
@@ -306,6 +311,7 @@ class DatabaseConnection {
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
+                println("Code: ${response.code()} | Body: $body")
                 addedItemsInCollectionAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
@@ -342,14 +348,16 @@ class DatabaseConnection {
         val url = "$rootURL/item?barcode=$barcode"
 
         //Generate the Request
-        val request = Request.Builder().url(url).get().build()
+        val request = Request.Builder().url(url).build()
 
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
-                val gson = GsonBuilder().create()
-                ItemsByBarcode = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                if (body != null){
+                    val gson = GsonBuilder().create()
+                    ItemsByBarcode = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                }
                 itemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
@@ -385,6 +393,7 @@ class DatabaseConnection {
         unsafeHttpClient.newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call, response: Response) {
                 val body = response.body()?.string()
+                println("Code: ${response.code()} | Body: $body")
                 addedItemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
