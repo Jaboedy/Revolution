@@ -22,18 +22,22 @@ import androidx.databinding.adapters.TextViewBindingAdapter.setText
 class DatabaseConnection {
 
     //Private Attributes
-    private var Token          : String = ""
-    private var Collections    : List<Collection> = emptyList()
-    private var Items          : List<ItemG> = emptyList()
-    private var ItemsByBarcode : List<ItemG> = emptyList()
-    private var methodTimeOut :        Int = 15000
+    private var Token             : String = ""
+    private var Collections       : List<Collection> = emptyList()
+    private var ItemsInCollection : List<ItemG> = emptyList()
+    private var ItemsByBarcode    : List<ItemG> = emptyList()
+    private var methodTimeOut     : Int = 15000
     private val unsafeHttpClient = getUnsafeOkHttpClient()
 
     //Public Attributes
-    var collectionsAvailable :   Boolean = true
-    var itemsAvailable:          Boolean = true
-    var itemsByBarcodeAvailable: Boolean = true
-    var tokenAvailable:          Boolean = true
+    var tokenAvailable:                   Boolean = true
+    var collectionsAvailable :            Boolean = true
+    var createdCollectionAvailable:       Boolean = true
+    var itemsInCollectionAvailable:       Boolean = true
+    var addedItemsInCollectionAvailable : Boolean = true
+    var itemsByBarcodeAvailable:          Boolean = true
+    var addedItemsByBarcodeAvailable:     Boolean = true
+
     val rootURL  = "http://ec2-3-92-30-180.compute-1.amazonaws.com"
 
     fun getUnsafeOkHttpClient(): OkHttpClient {
@@ -63,43 +67,14 @@ class DatabaseConnection {
 
     }
 
-    fun SynchronousLogIn(userName: String, password: String) : String?{
-
-        //Block Token Request if Token Unavailable
-        if (!tokenAvailable){
-            return Token
-        }
-
-        //Set Availability
-        else{
-            tokenAvailable = false
-        }
-
-        //Generate Request URL
-        val url = "$rootURL/login?name=$userName&password=$password"
-
-        //Generate the Request
-        val request = Request.Builder().url(url).build()
-
-        //Call Web Service
-        val response = unsafeHttpClient.newCall(request).execute()
-
-        //Return AuthToken
-        tokenAvailable = true
-        return if (response.isSuccessful){
-            response.body()?.toString()
-        }else{
-            null
-        }
-    }
-
-    fun getAuthToken() : String{
-        return Token
-    }
-
+    /*Functions for AuthToken Actions*/
     fun waitForAuthToken() : String{
         val endTime = System.currentTimeMillis() + methodTimeOut
         while (tokenAvailable == false && endTime > System.currentTimeMillis()){}
+        return Token
+    }
+
+    fun getAuthToken() : String{
         return Token
     }
 
@@ -173,13 +148,14 @@ class DatabaseConnection {
         })
     }
 
-    fun getCollections() : List<Collection>{
-        return Collections
-    }
-
+    /*Functions for Collection Actions*/
     fun waitForCollections() : List<Collection>{
         val endTime = System.currentTimeMillis() + methodTimeOut
         while (collectionsAvailable == false && endTime > System.currentTimeMillis()){}
+        return Collections
+    }
+
+    fun getCollections() : List<Collection>{
         return Collections
     }
 
@@ -222,28 +198,112 @@ class DatabaseConnection {
         })
     }
 
-    fun addToCollection(name: String, desc: String){
-
-    }
-
-    fun createCollection(){
-
-    }
-
-    fun getItems() : List<ItemG>{
-        return Items
-    }
-
-    fun setItems(AuthToken: String, CollectionId : String){
-
+    fun createCollection(AuthToken: String, name: String, desc: String){
         //Block Token Request if Token Unavailable
-        if (!itemsAvailable){
+        if (!createdCollectionAvailable){
             return
         }
 
         //Set Availability
         else{
-            itemsAvailable = false
+            createdCollectionAvailable = false
+        }
+
+
+        //Generate Request URL
+        val url = "$rootURL/collection?token=$AuthToken"
+
+        //Generate the JSON Request Body
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonBody = "{\"name\": \"$name\",\"desc\": \"$desc\"}"
+        val requestBody = RequestBody.create(jsonMediaType, jsonBody)
+
+        //Generate the Request
+        val request = Request.Builder().url(url).put(requestBody).build()
+
+        unsafeHttpClient.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                createdCollectionAvailable = true
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+                createdCollectionAvailable = true
+            }
+        })
+    }
+
+    /*Functions for Items in Collection Actions*/
+    fun waitForItemsInCollection(): List<ItemG>{
+        val endTime = System.currentTimeMillis() + methodTimeOut
+        while (collectionsAvailable == false && endTime > System.currentTimeMillis()){}
+        return ItemsInCollection
+    }
+
+    fun getItemsInCollection() : List<ItemG>{
+        return ItemsInCollection
+    }
+
+    fun setItemsInCollection(AuthToken: String, CollectionId : String){
+
+        //Block Token Request if Token Unavailable
+        if (!itemsInCollectionAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            itemsInCollectionAvailable = false
+        }
+
+        //Generate the URL
+        val url = "$rootURL/collection?token=$AuthToken&collection_id=$CollectionId"
+
+        //Generate the Request
+        val request = Request.Builder().url(url).get().build()
+
+        //Generate the Client
+        val client = getUnsafeOkHttpClient()
+
+
+        client.newCall(request).enqueue(object : Callback {
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body()?.string()
+                println("Code: ${response.code()} | Body: $body")
+                val gson = GsonBuilder().create()
+                ItemsInCollection = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                itemsInCollectionAvailable = true
+            }
+            override fun onFailure(call: Call, e: IOException) {
+                println("Error: ${e.message}")
+                itemsInCollectionAvailable = true
+            }
+        })
+    }
+
+    fun addItemsInCollection(){
+
+    }
+
+    /*Functions for Items by Barcode Actions*/
+    fun waitForItemsByBarcode(){
+
+    }
+
+    fun getItemsByBarcode() : List<ItemG>{
+        return ItemsByBarcode
+    }
+
+    fun setItemsByBarcode(AuthToken: String, CollectionId : String){
+
+        //Block Token Request if Token Unavailable
+        if (!itemsByBarcodeAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            itemsByBarcodeAvailable = false
         }
 
         //Generate the URL
@@ -261,54 +321,33 @@ class DatabaseConnection {
                 val body = response.body()?.string()
                 println("Code: ${response.code()} | Body: $body")
                 val gson = GsonBuilder().create()
-                Items = gson.fromJson(body, Array<ItemG>::class.java).toList()
-                itemsAvailable = true
+                ItemsByBarcode = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                itemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
-                itemsAvailable = true
+                itemsByBarcodeAvailable = true
             }
         })
     }
 
-    fun createItems(){
+    fun addItemsByBarcode(Barcode: String, Name: String, Description: String){
+        //Generate the JSON Request Body
+        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonBody = "{\"barcode\": \"$Barcode\",\"name\": \"$Name\",\"desc\": \"$Description\"}"
+        val body = RequestBody.create(jsonMediaType, jsonBody)
+
 
     }
 
     /*
-    fun CreateUser(userName: String, password: String){
-
-        //Print Line for Function Initiation Confirmation
-        println("Attempting to Create User")
-
-        //Generate the Empty JSON Request Body
-        val JSON = MediaType.parse("application/json; charset=utf-8")
-        val jsonBody = "{}"
-        val RequestBody = RequestBody.create(JSON, jsonBody)
-
-        //Generate the Request
-        val url = "http://ec2-3-92-30-180.compute-1.amazonaws.com/user?name=$userName&password=$password"
-        val request = Request.Builder().url(url).put(RequestBody).build()
-        val client = getUnsafeOkHttpClient()
-        client.newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call, response: Response) {
-                println("Code: ${response.code()} | Body: ${response.body()?.string()}")
-            }
-            override fun onFailure(call: Call, e: IOException) {
-                println("Error: ${e.message}")
-            }
-        })
-    }
 
     fun AddItemToDatabase(Barcode: String, Name: String, Description: String){
 
         //Print Line for Function Initiation Confirmation
         println("Attempting to Add Item to the Database")
 
-        //Generate the JSON Request Body
-        val JSON = MediaType.parse("application/json; charset=utf-8")
-        val jsonBody = "{\"barcode\": \"$Barcode\",\"name\": \"$Name\",\"desc\": \"$Description\"}"
-        val body = RequestBody.create(JSON, jsonBody)
+
 
         //Generate the Request
         val url = "http://ec2-3-92-30-180.compute-1.amazonaws.com/item"
