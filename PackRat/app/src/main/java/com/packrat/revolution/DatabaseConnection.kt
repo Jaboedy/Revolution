@@ -22,16 +22,18 @@ import androidx.databinding.adapters.TextViewBindingAdapter.setText
 class DatabaseConnection {
 
     //Private Attributes
-    private var Token       : String = ""
-    private var Collections : List<Collection> = emptyList()
-    private var Items       : List<ItemG> = emptyList()
-    public  var collectionsAvailable : Boolean = true
-    private var itemsAvailable:        Boolean = true
-    public  var tokenAvailable:        Boolean = true
-    private var methodTimeOut :        Int = 5000
+    private var Token          : String = ""
+    private var Collections    : List<Collection> = emptyList()
+    private var Items          : List<ItemG> = emptyList()
+    private var ItemsByBarcode : List<ItemG> = emptyList()
+    private var methodTimeOut :        Int = 15000
     private val unsafeHttpClient = getUnsafeOkHttpClient()
 
     //Public Attributes
+    var collectionsAvailable :   Boolean = true
+    var itemsAvailable:          Boolean = true
+    var itemsByBarcodeAvailable: Boolean = true
+    var tokenAvailable:          Boolean = true
     val rootURL  = "http://ec2-3-92-30-180.compute-1.amazonaws.com"
 
     fun getUnsafeOkHttpClient(): OkHttpClient {
@@ -96,16 +98,8 @@ class DatabaseConnection {
     }
 
     fun waitForAuthToken() : String{
-        var sessionTimedOut = false
-        while (tokenAvailable == false && sessionTimedOut == false){
-            object : CountDownTimer(methodTimeOut.toLong(), 1000) {
-                override fun onTick(millisUntilFinished: Long) {
-                }
-                override fun onFinish() {
-                    sessionTimedOut = true
-                }
-            }.start()
-        }
+        val endTime = System.currentTimeMillis() + methodTimeOut
+        while (tokenAvailable == false && endTime > System.currentTimeMillis()){}
         return Token
     }
 
@@ -143,6 +137,16 @@ class DatabaseConnection {
 
     fun createAuthToken(userName: String, password: String){
 
+        //Block Token Request if Token Unavailable
+        if (!tokenAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            tokenAvailable = false
+        }
+
         //Generate Request URL
         val url = "$rootURL/user?name=$userName&password=$password"
 
@@ -160,14 +164,22 @@ class DatabaseConnection {
                 if (body != null){
                     Token = body
                 }
+                tokenAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                tokenAvailable = true
             }
         })
     }
 
     fun getCollections() : List<Collection>{
+        return Collections
+    }
+
+    fun waitForCollections() : List<Collection>{
+        val endTime = System.currentTimeMillis() + methodTimeOut
+        while (collectionsAvailable == false && endTime > System.currentTimeMillis()){}
         return Collections
     }
 
@@ -210,7 +222,7 @@ class DatabaseConnection {
         })
     }
 
-    fun editCollection(){
+    fun addToCollection(name: String, desc: String){
 
     }
 
@@ -223,6 +235,16 @@ class DatabaseConnection {
     }
 
     fun setItems(AuthToken: String, CollectionId : String){
+
+        //Block Token Request if Token Unavailable
+        if (!itemsAvailable){
+            return
+        }
+
+        //Set Availability
+        else{
+            itemsAvailable = false
+        }
 
         //Generate the URL
         val url = "$rootURL/collection?token=$AuthToken"
@@ -240,9 +262,11 @@ class DatabaseConnection {
                 println("Code: ${response.code()} | Body: $body")
                 val gson = GsonBuilder().create()
                 Items = gson.fromJson(body, Array<ItemG>::class.java).toList()
+                itemsAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
                 println("Error: ${e.message}")
+                itemsAvailable = true
             }
         })
     }
