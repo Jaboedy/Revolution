@@ -31,8 +31,8 @@ class NewItemFragment : Fragment() {
                 var dc = DatabaseConnection()
                 dc.addItemsByBarcode(binding.textboxItemBarcode.text.toString(),binding.textboxItemName.text.toString(),binding.textboxItemDesc.text.toString())
                 var id = dc.waitForAddedItemsByBarcode()
-                if(!id.isEmpty()) {
-                    dc.addItemsInCollection(aToken, listId, id.first().id.toString())
+                if(id != null) {
+                    dc.addItemsInCollection(aToken, listId, id.toString())
                 }
                 else {
                     Toast.makeText(this.context, "Item already exists or failed to add", Toast.LENGTH_LONG).show()

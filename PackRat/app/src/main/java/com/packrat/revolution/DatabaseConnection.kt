@@ -432,8 +432,8 @@ class DatabaseConnection {
                 if (responseData.code() == 201){
                     if (body != null){
                         val gson = GsonBuilder().create()
-                        val jsonObj = gson.fromJson(body, Array<ItemA>::class.java)
-                        AddedItemsByBarcode = jsonObj.get(0).id
+                        val jsonObj = gson.fromJson(body, ItemA::class.java)
+                        AddedItemsByBarcode = jsonObj.id
                         addItemByBarcodeReturnMessage = "This Item Has Been Created!"
                     }
                 }
