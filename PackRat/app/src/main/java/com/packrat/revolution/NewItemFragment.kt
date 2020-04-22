@@ -6,6 +6,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.databinding.DataBindingUtil
 import androidx.navigation.findNavController
@@ -29,8 +30,13 @@ class NewItemFragment : Fragment() {
             view.run {
                 var dc = DatabaseConnection()
                 dc.addItemsByBarcode(binding.textboxItemBarcode.text.toString(),binding.textboxItemName.text.toString(),binding.textboxItemDesc.text.toString())
-                var id = dc.waitForItemsByBarcode()
-                dc.addItemsInCollection(aToken, listId, id.first().id.toString())
+                var id = dc.waitForAddedItemsByBarcode()
+                if(!id.isEmpty()) {
+                    dc.addItemsInCollection(aToken, listId, id.first().id.toString())
+                }
+                else {
+                    Toast.makeText(this.context, "Item already exists or failed to add", Toast.LENGTH_LONG).show()
+                }
                 findNavController().navigate(R.id.action_newItemFragment_to_itemsFragment, bundleOf("authTokenArg" to aToken, "listIdArg" to listId))
             }
 
