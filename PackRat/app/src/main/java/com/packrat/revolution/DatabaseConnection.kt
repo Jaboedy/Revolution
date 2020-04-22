@@ -26,7 +26,7 @@ class DatabaseConnection {
     private var Collections        : List<Collection> = emptyList()
     private var ItemsInCollection  : List<ItemG> = emptyList()
     private var ItemsByBarcode     : List<ItemG> = emptyList()
-    private var AddedItemsByBarcode: List<ItemA> = emptyList()
+    private var AddedItemsByBarcode: Int = 0
     private var methodTimeOut     : Int = 15000
     private val unsafeHttpClient = getUnsafeOkHttpClient()
 
@@ -388,13 +388,13 @@ class DatabaseConnection {
         })
     }
 
-    fun waitForAddedItemsByBarcode() : List<ItemA>{
+    fun waitForAddedItemsByBarcode() : Int{
         val endTime = System.currentTimeMillis() + methodTimeOut
         while (addedItemsByBarcodeAvailable == false && endTime > System.currentTimeMillis()){}
         return AddedItemsByBarcode
     }
 
-    fun getAddedItemsByBarcode() : List<ItemA>{
+    fun getAddedItemsByBarcode() : Int{
         return AddedItemsByBarcode
     }
 
@@ -432,14 +432,15 @@ class DatabaseConnection {
                 if (responseData.code() == 201){
                     if (body != null){
                         val gson = GsonBuilder().create()
-                        AddedItemsByBarcode = gson.fromJson(body, Array<ItemA>::class.java).toList()
+                        val jsonObj = gson.fromJson(body, Array<ItemA>::class.java)
+                        AddedItemsByBarcode = jsonObj.get(0).id
                         addItemByBarcodeReturnMessage = "This Item Has Been Created!"
                     }
                 }
                 addedItemsByBarcodeAvailable = true
             }
             override fun onFailure(call: Call, e: IOException) {
-                println("Error: ${e.message}")
+                println("PackRatError: ${e.message}")
                 addItemByBarcodeReturnMessage = "An Error Has Occurred! Please Try Again Later!!!"
                 addedItemsByBarcodeAvailable = true
             }
